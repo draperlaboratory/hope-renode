@@ -1,6 +1,6 @@
 [submodule "src/Infrastructure"]
 	path = src/Infrastructure
-	url = https://github.com/DoverMicrosystems/renode-infrastructure.git
+	url = ssh://dover-cc/v1/repos/renode-infrastructure
 	branch = dover
 [submodule "lib/termsharp"]
 	path = lib/termsharp
