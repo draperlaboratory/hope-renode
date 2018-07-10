@@ -17,7 +17,7 @@ output/.built: $(FILES)
 install: all
 	DIR=$(ISP_PREFIX)renode TARGET="Release" BASE=. bash tools/packaging/common_copy_files.sh
 	mkdir -p $(ISP_PREFIX)bin/
-	sed s%/opt/%$(ISP_PREFIX)%g tools/packaging/linux/renode.sh > $(ISP_PREFIX)bin/renode
+	cp tools/packaging/linux/renode.sh $(ISP_PREFIX)bin/renode
 	chmod +x $(ISP_PREFIX)bin/renode
 
 
