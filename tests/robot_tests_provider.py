@@ -16,7 +16,7 @@ def install_cli_arguments(parser):
     parser.add_argument("--robot-framework-remote-server-directory-prefix", dest="remote_server_directory_prefix", action="store", default=os.path.join(this_path, '../output/bin'), help="Location of robot framework remote server binary. This is concatenated with current configuration to create full path.")
     parser.add_argument("--robot-framework-remote-server-name", dest="remote_server_name", action="store", default="Renode.exe", help="Name of robot framework remote server binary.")
     parser.add_argument("--robot-framework-remote-server-port", dest="remote_server_port", action="store", default=9999, help="Port of robot framework remote server binary.")
-    parser.add_argument("--disable-xwt", dest="disable_xwt", action="store_true", default=False, help="Disables support for XWT.")
+    parser.add_argument("--enable-xwt", dest="enable_xwt", action="store_true", default=False, help="Enables support for XWT.")
     parser.add_argument("--exclude", default="", help="Do not run tests marked with a tag.")
     parser.add_argument("--show-log", dest="show_log", action="store_true", default=False, help="Display log messages in console (might corrupt robot summary output).")
     parser.add_argument("--show-monitor", dest="show_monitor", action="store_true", default=False, help="Display monitor window.")
@@ -27,6 +27,13 @@ def verify_cli_arguments(options):
     if options.port == str(options.remote_server_port):
         print('Port {} is reserved for Robot Framework remote server and cannot be used for remote debugging.'.format(options.remote_server_port))
         sys.exit(1)
+
+def is_process_running(pid):
+    if not psutil.pid_exists(pid):
+        return False
+    proc = psutil.Process(pid)
+    #docs note: is_running() will return True also if the process is a zombie (p.status() == psutil.STATUS_ZOMBIE)
+    return proc.is_running() and proc.status() != psutil.STATUS_ZOMBIE
 
 class RobotTestSuite(object):
     instances_count = 0
@@ -59,6 +66,8 @@ class RobotTestSuite(object):
             args.append('--hide-log')
         if not options.show_analyzers:
             args.append('--hide-analyzers')
+        if not options.enable_xwt and not(options.show_analyzers or options.show_monitor):
+           args.append('--disable-xwt')
 
         if platform.startswith("linux") or platform == "darwin":
             args.insert(0, 'mono')
@@ -70,13 +79,14 @@ class RobotTestSuite(object):
             args.insert(2, '--debugger-agent=transport=dt_socket,server=y,suspend={0},address=127.0.0.1:{1}'.format('y' if options.suspend else 'n', options.port))
         elif options.debug_mode:
             args.insert(1, '--debug')
-        if options.disable_xwt:
-            args.insert(-1, '--disable-xwt')
 
         if sys.stdin.isatty():
             try:
                 for proc in [psutil.Process(pid) for pid in psutil.pids()]:
                     if '--robot-server-port' in proc.cmdline() and str(options.remote_server_port) in proc.cmdline():
+                        if not is_process_running(proc.pid):
+                            #process is zombie
+                            continue
                         print('It seems that Robot process (pid {}, name {}) is currently running on port {}'.format(proc.pid, proc.name(), options.remote_server_port))
                         result = raw_input('Do you want me to kill it? [y/N] ')
                         if result in ['Y', 'y']:
@@ -88,7 +98,6 @@ class RobotTestSuite(object):
 
         if options.run_gdb:
             args = ['gdb', '-nx', '-ex', 'handle SIGXCPU SIG33 SIG35 SIG36 SIGPWR nostop noprint', '--args'] + args
-
         RobotTestSuite.robot_frontend_process = subprocess.Popen(args, cwd=self.remote_server_directory, bufsize=1)
 
     def run(self, options):
@@ -109,7 +118,9 @@ class RobotTestSuite(object):
 
         if RobotTestSuite.robot_frontend_process is None:
             self._run_remote_server(options)
-
+        elif not is_process_running(RobotTestSuite.robot_frontend_process.pid):
+            self._run_remote_server(options)
+        
         if any(tests_without_hotspots):
             result = result and self._run_inner(options.fixture, None, tests_without_hotspots, options)
         if any(tests_with_hotspots):
