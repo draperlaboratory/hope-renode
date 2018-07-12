@@ -6,6 +6,7 @@
 //
 using System.Threading;
 using Antmicro.Renode;
+using Antmicro.Renode.UI;
 using System.IO;
 using System;
 using Antmicro.Renode.Utilities;
@@ -16,6 +17,7 @@ namespace Antmicro.Renode
 {
     public class Program
     {
+        [STAThread]
         public static void Main(string[] args)
         {
             ConfigureEnvironment();

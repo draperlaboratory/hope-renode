@@ -9,7 +9,7 @@ all: output/.built
 FILES := $(shell find -name "*" -type f -not -path "./output/*" -not -path "*/bin/*" -not -path "*/obj/*" | sed 's/ /\\ /g')
 output/.built: $(FILES)
 	./build.sh
-	cd src/Infrastructure; git checkout dover
+#	cd src/Infrastructure; git checkout dover
 	$(MAKE) -f Makefile.isp clean
 	./build.sh
 	touch $@
