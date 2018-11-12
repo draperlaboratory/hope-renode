@@ -1,8 +1,5 @@
 #!/bin/bash
 
-echo "PROXY"
-echo $http_proxy
-
 DEBIAN_FRONTEND=noninteractive apt-get install -y gnupg
 
 if [[ -v http_proxy ]]; then
