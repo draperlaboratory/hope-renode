@@ -15,14 +15,14 @@ output/.built: $(FILES)
 	touch $@
 
 install: all
-	DIR=$(ISP_PREFIX)renode TARGET="Release" BASE=. bash tools/packaging/common_copy_files.sh
-	mkdir -p $(ISP_PREFIX)bin/
-	cp tools/packaging/linux/renode.sh $(ISP_PREFIX)bin/renode
-	chmod +x $(ISP_PREFIX)bin/renode
+	DIR=$(ISP_PREFIX)/renode TARGET="Release" BASE=. bash tools/packaging/common_copy_files.sh
+	mkdir -p $(ISP_PREFIX)/bin/
+	cp tools/packaging/linux/renode.sh $(ISP_PREFIX)/bin/renode
+	chmod +x $(ISP_PREFIX)/bin/renode
 
 
 clean:
-	$(RM) -r $(ISP_PREFIX)bin/renode
-	$(RM) -r $(ISP_PREFIX)renode
+	$(RM) -r $(ISP_PREFIX)/bin/renode
+	$(RM) -r $(ISP_PREFIX)/renode
 	./build.sh -c
 	$(RM) -r output
